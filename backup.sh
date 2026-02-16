@@ -36,6 +36,10 @@ pg_dump -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER" \
   $PGDUMP_EXTRA_ARGS \
   "$POSTGRES_DB" > "$TMPFILE"
 
-aws s3 cp "$TMPFILE" "s3://${S3_BUCKET}/${S3_KEY}" $ENDPOINT_ARG
+aws s3api put-object \
+  --bucket "$S3_BUCKET" \
+  --key "$S3_KEY" \
+  --body "$TMPFILE" \
+  $ENDPOINT_ARG > /dev/null
 
 echo "$(date '+%Y-%m-%d %H:%M:%S') Backup complete: s3://${S3_BUCKET}/${S3_KEY}"
