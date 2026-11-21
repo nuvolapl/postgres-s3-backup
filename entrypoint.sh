@@ -1,5 +1,5 @@
 #!/bin/sh
-set -e
+set -eu
 
 : "${POSTGRES_HOST:?POSTGRES_HOST is required}"
 : "${POSTGRES_USER:?POSTGRES_USER is required}"
@@ -11,15 +11,15 @@ set -e
 
 SCHEDULE="${SCHEDULE:-0 3 * * *}"
 
-# Persist backup-related env vars for cron (cron doesn't inherit container env)
-printenv | grep -E '^(POSTGRES_|S3_|SCHEDULE|BACKUP_ON_START|PGDUMP_EXTRA_ARGS)' > /etc/backup.env
+# Persist backup-related env vars for cron (cron doesn't inherit container env).
+# `export -p` quotes values, so spaces and special characters survive sourcing.
+(umask 077; export -p | grep -E '^export (POSTGRES_|S3_|AWS_|PGSSL|PGDUMP_EXTRA_ARGS)' > /etc/backup.env || true)
 
-# Set up cron job
 echo "${SCHEDULE} . /etc/backup.env; /usr/local/bin/backup.sh >> /proc/1/fd/1 2>&1" | crontab -
 
 echo "postgres-s3-backup: scheduled '${SCHEDULE}' for ${POSTGRES_DB}@${POSTGRES_HOST}"
 
-if [ "${BACKUP_ON_START:-}" = "true" ]; then
+if [ "${BACKUP_ON_START:-false}" = "true" ]; then
   /usr/local/bin/backup.sh
 fi
 

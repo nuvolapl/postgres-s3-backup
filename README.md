@@ -14,7 +14,7 @@ Supports any S3-compatible backend: AWS S3, OCI Object Storage, MinIO, Cloudflar
 ```yaml
 services:
   postgres-s3-backup:
-    image: ghcr.io/nuvolapl/postgres-s3-backup:18
+    image: ghcr.io/nuvolapl/postgres-s3-backup:19
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_USER: myuser
@@ -24,6 +24,7 @@ services:
       S3_ACCESS_KEY_ID: AKIA...
       S3_SECRET_ACCESS_KEY: secret
       S3_ENDPOINT: https://s3.amazonaws.com   # optional, for S3-compatible services
+      S3_REGION: eu-central-1                 # optional, default: us-east-1
       S3_PREFIX: daily                        # optional, folder in bucket
       SCHEDULE: "0 3 * * *"                   # optional, default: daily at 3 AM UTC
       BACKUP_ON_START: "true"                 # optional, run backup immediately on start
@@ -39,9 +40,10 @@ Tags follow the same convention as the [official PostgreSQL image](https://hub.d
 
 | Tag | PostgreSQL version | Base image |
 |-----|--------------------|------------|
-| `18`, `18-alpine`, `latest` | 18 | `postgres:18-alpine` |
-| `17`, `17-alpine` | 17 | `postgres:17-alpine` |
-| `16`, `16-alpine` | 16 | `postgres:16-alpine` |
+| `19`, `19-alpine`, `latest` | 19 | `postgres:19-alpine3.24` |
+| `18`, `18-alpine` | 18 | `postgres:18-alpine3.24` |
+| `17`, `17-alpine` | 17 | `postgres:17-alpine3.24` |
+| `16`, `16-alpine` | 16 | `postgres:16-alpine3.24` |
 
 Pick the tag matching your PostgreSQL server version so that `pg_dump` is compatible.
 
@@ -60,10 +62,13 @@ Multi-arch images are published for `linux/amd64` and `linux/arm64`.
 | `S3_ACCESS_KEY_ID` | Yes | | S3 access key |
 | `S3_SECRET_ACCESS_KEY` | Yes | | S3 secret key |
 | `S3_ENDPOINT` | No | | Custom S3 endpoint URL |
+| `S3_REGION` | No | `us-east-1` | S3 region (falls back to `AWS_DEFAULT_REGION`) |
 | `S3_PREFIX` | No | | Path prefix (folder) in bucket |
 | `SCHEDULE` | No | `0 3 * * *` | Cron expression (UTC) |
 | `BACKUP_ON_START` | No | `false` | Run a backup immediately on container start |
-| `PGDUMP_EXTRA_ARGS` | No | `--no-owner --no-acl` | Additional `pg_dump` arguments |
+| `PGDUMP_EXTRA_ARGS` | No | `--no-owner --no-acl` | Additional `pg_dump` arguments (set empty to disable defaults) |
+
+Other `AWS_*` and `PGSSL*` variables (e.g. `PGSSLMODE`) are passed through to the AWS CLI and `pg_dump`.
 
 ## Backup format
 
